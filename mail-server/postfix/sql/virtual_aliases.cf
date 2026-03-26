@@ -1,0 +1,6 @@
+# Postfix PostgreSQL lookup: email forwarding rules
+user = mailuser
+password = MAIL_DB_PASSWORD_PLACEHOLDER
+hosts = localhost
+dbname = hostingplatform
+query = SELECT destination FROM email_aliases WHERE source = '%s' AND active = TRUE

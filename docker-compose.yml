@@ -1,0 +1,36 @@
+# ============================================================
+# Hosting Platform — Local Development Docker Compose
+# Runs PostgreSQL for local development
+# The control panel API runs on the host (go run main.go)
+# ============================================================
+
+services:
+  # PostgreSQL database (mirrors the EC2 local PostgreSQL)
+  postgres:
+    image: postgres:15-alpine
+    container_name: hosting-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: localdevpassword
+      POSTGRES_DB: hostingplatform
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for future session cache / rate limiting)
+  redis:
+    image: redis:7-alpine
+    container_name: hosting-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

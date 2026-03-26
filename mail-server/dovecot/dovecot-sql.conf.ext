@@ -1,0 +1,26 @@
+# ============================================================
+# Dovecot PostgreSQL Authentication
+# Queries the email_accounts table in the hostingplatform database
+# Variables substituted by user-data.sh at deploy time
+# ============================================================
+
+driver = pgsql
+connect = host=localhost dbname=hostingplatform user=mailuser password=MAIL_DB_PASSWORD_PLACEHOLDER
+
+# Password lookup — authenticates IMAP and SMTP submission users
+password_query = SELECT email as user, password, \
+  'maildir:/var/mail/vhosts/%d/%n/Maildir' as userdb_mail, \
+  5000 as userdb_uid, 5000 as userdb_gid \
+  FROM email_accounts \
+  WHERE email = '%u' AND active = TRUE AND mail_enabled = TRUE
+
+# User lookup — finds maildir location and quota
+user_query = SELECT \
+  'maildir:/var/mail/vhosts/%d/%n/Maildir' as home, \
+  5000 as uid, 5000 as gid, \
+  CONCAT('*:bytes=', quota) as quota_rule \
+  FROM email_accounts \
+  WHERE email = '%u' AND active = TRUE AND mail_enabled = TRUE
+
+# Password hashing scheme (must match what the Go API produces)
+default_pass_scheme = SHA512-CRYPT

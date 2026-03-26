@@ -1,0 +1,6 @@
+# Postfix PostgreSQL lookup: mailbox path for an email address
+user = mailuser
+password = MAIL_DB_PASSWORD_PLACEHOLDER
+hosts = localhost
+dbname = hostingplatform
+query = SELECT maildir FROM email_accounts WHERE email = '%s' AND active = TRUE AND mail_enabled = TRUE

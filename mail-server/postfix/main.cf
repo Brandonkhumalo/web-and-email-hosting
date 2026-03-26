@@ -1,0 +1,61 @@
+# ============================================================
+# Postfix Main Configuration
+# Virtual domains from PostgreSQL, outbound relay via SES
+# Variables (${...}) are substituted by user-data.sh at deploy time
+# ============================================================
+
+# Identity
+myhostname = mail.PLATFORM_DOMAIN_PLACEHOLDER
+mydomain = PLATFORM_DOMAIN_PLACEHOLDER
+myorigin = $mydomain
+mydestination = localhost
+inet_interfaces = all
+inet_protocols = ipv4
+
+# Virtual mailbox domains — looked up from PostgreSQL
+virtual_mailbox_domains = pgsql:/etc/postfix/sql/virtual_domains.cf
+virtual_mailbox_maps = pgsql:/etc/postfix/sql/virtual_mailboxes.cf
+virtual_alias_maps = pgsql:/etc/postfix/sql/virtual_aliases.cf
+
+# Deliver to Dovecot via LMTP
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+
+# Virtual mailbox ownership (vmail user, UID/GID 5000)
+virtual_uid_maps = static:5000
+virtual_gid_maps = static:5000
+virtual_mailbox_base = /var/mail/vhosts
+
+# Relay all outbound email through Amazon SES
+relayhost = [email-smtp.SES_REGION_PLACEHOLDER.amazonaws.com]:587
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_tls_security_level = encrypt
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+# TLS for inbound connections
+smtpd_tls_cert_file = /etc/letsencrypt/live/mail.PLATFORM_DOMAIN_PLACEHOLDER/fullchain.pem
+smtpd_tls_key_file = /etc/letsencrypt/live/mail.PLATFORM_DOMAIN_PLACEHOLDER/privkey.pem
+smtpd_tls_security_level = may
+smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+
+# SASL auth for submission (Dovecot provides the auth socket)
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+
+# Recipient restrictions
+smtpd_recipient_restrictions =
+    permit_sasl_authenticated,
+    permit_mynetworks,
+    reject_unauth_destination
+
+# OpenDKIM milter for signing outbound mail
+milter_protocol = 6
+milter_default_action = accept
+smtpd_milters = inet:localhost:8891
+non_smtpd_milters = inet:localhost:8891
+
+# Limits
+message_size_limit = 26214400
+mailbox_size_limit = 0

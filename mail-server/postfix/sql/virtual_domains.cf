@@ -1,0 +1,6 @@
+# Postfix PostgreSQL lookup: which domains accept mail
+user = mailuser
+password = MAIL_DB_PASSWORD_PLACEHOLDER
+hosts = localhost
+dbname = hostingplatform
+query = SELECT name FROM domains WHERE name = '%s' AND email_enabled = TRUE AND active = TRUE
