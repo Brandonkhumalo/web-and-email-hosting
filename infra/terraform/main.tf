@@ -13,14 +13,15 @@ terraform {
     }
   }
 
-  # Store Terraform state in S3 (create this bucket manually first)
-  backend "s3" {
-    bucket         = "yourplatform-terraform-state"
-    key            = "hosting-platform/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "terraform-locks"
-    encrypt        = true
-  }
+  # State stored locally by default. To use remote state later,
+  # create an S3 bucket and uncomment the backend block below:
+  # backend "s3" {
+  #   bucket       = "tishanyq-hosting-terraform-state"
+  #   key          = "tishanyq-hosting/terraform.tfstate"
+  #   region       = "us-east-1"
+  #   use_lockfile = true
+  #   encrypt      = true
+  # }
 }
 
 provider "aws" {
@@ -28,7 +29,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "hosting-platform"
+      Project     = "tishanyq-hosting"
       ManagedBy   = "terraform"
       Environment = var.environment
     }

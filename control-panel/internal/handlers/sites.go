@@ -9,10 +9,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"hosting-platform/control-panel/internal/database"
-	"hosting-platform/control-panel/internal/middleware"
-	"hosting-platform/control-panel/internal/models"
-	"hosting-platform/control-panel/internal/services"
+	"tishanyq-hosting/control-panel/internal/database"
+	"tishanyq-hosting/control-panel/internal/middleware"
+	"tishanyq-hosting/control-panel/internal/models"
+	"tishanyq-hosting/control-panel/internal/services"
 )
 
 // SiteHandler handles static and backend site provisioning.

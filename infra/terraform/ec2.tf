@@ -26,7 +26,36 @@ data "aws_ami" "ubuntu" {
 resource "aws_eip" "main" {
   domain = "vpc"
 
-  tags = { Name = "hosting-platform-eip" }
+  tags = { Name = "tishanyq-hosting-eip" }
+}
+
+# --- IAM Role for EC2 (SSM Session Manager access) ---
+# Allows you to connect to the instance from the AWS Console browser terminal
+# instead of needing SSH keys locally
+
+resource "aws_iam_role" "ec2" {
+  name = "tishanyq-hosting-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = aws_iam_role.ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ec2" {
+  name = "tishanyq-hosting-ec2-profile"
+  role = aws_iam_role.ec2.name
 }
 
 # --- EC2 Instance ---
@@ -37,6 +66,7 @@ resource "aws_instance" "main" {
   key_name               = var.ssh_key_name
   subnet_id              = aws_subnet.public_a.id
   vpc_security_group_ids = [aws_security_group.ec2.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2.name
 
   root_block_device {
     volume_size = 40
@@ -53,7 +83,7 @@ resource "aws_instance" "main" {
     ses_region            = var.ses_region
   })
 
-  tags = { Name = "hosting-platform" }
+  tags = { Name = "tishanyq-hosting" }
 
   lifecycle {
     # Set to true once in production to prevent accidental deletion

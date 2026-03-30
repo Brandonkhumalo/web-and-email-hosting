@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"hosting-platform/control-panel/internal/config"
+	"tishanyq-hosting/control-panel/internal/config"
 )
 
 // DockerService manages customer backend containers using the Docker CLI.

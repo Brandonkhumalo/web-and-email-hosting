@@ -8,7 +8,7 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = { Name = "hosting-platform-vpc" }
+  tags = { Name = "tishanyq-hosting-vpc" }
 }
 
 # --- Single Public Subnet ---
@@ -28,7 +28,7 @@ resource "aws_subnet" "public_a" {
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
-  tags = { Name = "hosting-platform-igw" }
+  tags = { Name = "tishanyq-hosting-igw" }
 }
 
 # --- Route Table ---

@@ -18,10 +18,14 @@ dashboard/node_modules/
 dashboard/.next/
 dashboard/out/
 
-# IDE
+# IDE / Claude
 .vscode/
 .idea/
+.claude/
 *.swp
+
+# Scratch files with secrets
+ok.md
 
 # OS
 .DS_Store

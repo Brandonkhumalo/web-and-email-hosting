@@ -56,8 +56,8 @@ cd control-panel && go run main.go
 ### Production Deployment
 ```bash
 cd control-panel && GOOS=linux GOARCH=amd64 go build -o bin/control-panel .
-scp -i key.pem bin/control-panel ubuntu@<EC2_IP>:/opt/hosting-platform/bin/
-scp -i key.pem .env ubuntu@<EC2_IP>:/opt/hosting-platform/.env
+scp -i key.pem bin/control-panel ubuntu@<EC2_IP>:/opt/tishanyq-hosting/bin/
+scp -i key.pem .env ubuntu@<EC2_IP>:/opt/tishanyq-hosting/.env
 ssh -i key.pem ubuntu@<EC2_IP> 'sudo systemctl restart hosting-api'
 ```
 

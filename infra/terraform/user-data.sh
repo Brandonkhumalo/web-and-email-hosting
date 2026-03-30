@@ -19,7 +19,7 @@ apt-get install -y ca-certificates curl gnupg
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 chmod a+r /etc/apt/keyrings/docker.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources-list.d/docker.list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 systemctl enable docker && systemctl start docker
@@ -29,6 +29,9 @@ apt-get install -y nginx
 systemctl enable nginx
 
 # --- Install PostgreSQL 15 ---
+curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg
+echo "deb [signed-by=/etc/apt/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+apt-get update
 apt-get install -y postgresql-15 postgresql-client-15
 systemctl enable postgresql
 
@@ -82,7 +85,7 @@ systemctl restart postgresql
 
 mkdir -p /var/www
 mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
-mkdir -p /opt/hosting-platform/bin
+mkdir -p /opt/tishanyq-hosting/bin
 
 # Create vmail user for mailbox storage (UID/GID 5000)
 groupadd -g 5000 vmail || true
@@ -437,9 +440,9 @@ Requires=postgresql.service
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/hosting-platform
-ExecStart=/opt/hosting-platform/bin/control-panel
-EnvironmentFile=/opt/hosting-platform/.env
+WorkingDirectory=/opt/tishanyq-hosting
+ExecStart=/opt/tishanyq-hosting/bin/control-panel
+EnvironmentFile=/opt/tishanyq-hosting/.env
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -468,8 +471,8 @@ fi
 
 echo "=== EC2 bootstrap complete ==="
 echo "Next steps:"
-echo "1. Upload Go binary to /opt/hosting-platform/bin/control-panel"
-echo "2. Upload .env to /opt/hosting-platform/.env"
+echo "1. Upload Go binary to /opt/tishanyq-hosting/bin/control-panel"
+echo "2. Upload .env to /opt/tishanyq-hosting/.env"
 echo "3. Run: systemctl start hosting-api"
 echo "4. Run: certbot --nginx -d api.${platform_domain} -d mail.${platform_domain} -d webmail.${platform_domain} --email ${certbot_email} --agree-tos --non-interactive"
 echo "5. Update /etc/postfix/sasl_passwd with SES SMTP credentials, then run: postmap /etc/postfix/sasl_passwd && systemctl restart postfix"

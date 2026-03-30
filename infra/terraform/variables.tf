@@ -16,7 +16,7 @@ variable "environment" {
 }
 
 variable "platform_domain" {
-  description = "Your platform's root domain (e.g., yourplatform.com)"
+  description = "Your platform's root domain (e.g., tishanyq.co.zw)"
   type        = string
 }
 

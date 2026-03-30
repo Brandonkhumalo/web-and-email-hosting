@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"hosting-platform/control-panel/internal/config"
+	"tishanyq-hosting/control-panel/internal/config"
 )
 
 // DB holds the connection pool for the PostgreSQL database.

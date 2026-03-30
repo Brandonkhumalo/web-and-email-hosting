@@ -13,12 +13,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 
-	"hosting-platform/control-panel/internal/config"
-	"hosting-platform/control-panel/internal/database"
-	"hosting-platform/control-panel/internal/handlers"
-	"hosting-platform/control-panel/internal/middleware"
-	"hosting-platform/control-panel/internal/models"
-	"hosting-platform/control-panel/internal/services"
+	"tishanyq-hosting/control-panel/internal/config"
+	"tishanyq-hosting/control-panel/internal/database"
+	"tishanyq-hosting/control-panel/internal/handlers"
+	"tishanyq-hosting/control-panel/internal/middleware"
+	"tishanyq-hosting/control-panel/internal/models"
+	"tishanyq-hosting/control-panel/internal/services"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"hosting-platform/control-panel/internal/config"
+	"tishanyq-hosting/control-panel/internal/config"
 )
 
 // MailService handles mail-specific operations: password hashing,
@@ -25,7 +25,7 @@ func NewMailService(cfg *config.Config) *MailService {
 	}
 }
 
-// ServerHost returns the mail server hostname (e.g., mail.yourplatform.com).
+// ServerHost returns the mail server hostname (e.g., mail.tishanyq.co.zw).
 func (s *MailService) ServerHost() string {
 	return s.serverHost
 }

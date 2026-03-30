@@ -81,7 +81,7 @@ resource "aws_iam_access_key" "ses_smtp" {
 # Tracks bounce/complaint rates (required for production sending)
 
 resource "aws_ses_configuration_set" "main" {
-  name = "hosting-platform"
+  name = "tishanyq-hosting"
 }
 
 # NOTE: Customer domains are verified dynamically by the Go control panel:

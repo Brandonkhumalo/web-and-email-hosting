@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"hosting-platform/control-panel/internal/config"
+	"tishanyq-hosting/control-panel/internal/config"
 )
 
 // HostingService orchestrates static site and backend site provisioning.

@@ -26,7 +26,7 @@ func GenerateToken(customerID int64, email string, secret string, expireHours in
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "hosting-platform",
+			Issuer:    "tishanyq-hosting",
 		},
 	}
 

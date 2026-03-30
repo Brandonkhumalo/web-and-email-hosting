@@ -27,7 +27,7 @@ func NewDNSService(awsCfg aws.Config) *DNSService {
 func (s *DNSService) CreateHostedZone(ctx context.Context, domain string) (string, []string, error) {
 	out, err := s.client.CreateHostedZone(ctx, &route53.CreateHostedZoneInput{
 		Name:            aws.String(domain),
-		CallerReference: aws.String(fmt.Sprintf("hosting-platform-%s-%d", domain, ctx.Value("request_id"))),
+		CallerReference: aws.String(fmt.Sprintf("tishanyq-hosting-%s-%d", domain, ctx.Value("request_id"))),
 	})
 	if err != nil {
 		return "", nil, fmt.Errorf("create hosted zone: %w", err)

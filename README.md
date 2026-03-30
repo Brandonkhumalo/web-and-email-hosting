@@ -70,7 +70,7 @@ A self-hosted hosting platform that provides **email**, **static web hosting**, 
 ## Project Structure
 
 ```
-hosting-platform/
+tishanyq-hosting/
 ├── control-panel/              # Go API
 │   ├── main.go                 # Entry point, routes, auth handlers
 │   ├── Dockerfile
@@ -151,7 +151,7 @@ cd infra/terraform
 
 # Create a terraform.tfvars file
 cat > terraform.tfvars <<EOF
-platform_domain  = "yourplatform.com"
+platform_domain  = "tishanyq.co.zw"
 db_password      = "your-secure-password"
 mail_db_password = "your-mail-db-password"
 ssh_key_name     = "your-ec2-keypair"
@@ -191,9 +191,9 @@ curl -X POST http://localhost:8080/api/email/accounts \
 
 Then on your phone:
 - **Account Type**: IMAP
-- **Incoming Server**: mail.yourplatform.com
+- **Incoming Server**: mail.tishanyq.co.zw
 - **Incoming Port**: 993 (SSL/TLS)
-- **Outgoing Server**: mail.yourplatform.com
+- **Outgoing Server**: mail.tishanyq.co.zw
 - **Outgoing Port**: 587 (STARTTLS)
 - **Username**: test@yourcustomdomain.com
 - **Password**: securepassword123
@@ -228,12 +228,12 @@ When a customer adds `clientcompany.com`, these records are auto-created:
 
 | Type | Name | Value | Purpose |
 |------|------|-------|---------|
-| MX | clientcompany.com | 10 mail.yourplatform.com | Routes incoming email |
+| MX | clientcompany.com | 10 mail.tishanyq.co.zw | Routes incoming email |
 | TXT | clientcompany.com | v=spf1 include:amazonses.com ... -all | SPF authorization |
 | TXT | mail._domainkey.clientcompany.com | v=DKIM1; k=rsa; p=... | DKIM verification |
 | TXT | _dmarc.clientcompany.com | v=DMARC1; p=quarantine; ... | DMARC policy |
-| SRV | _imaps._tcp.clientcompany.com | 0 1 993 mail.yourplatform.com | Phone auto-discover |
-| SRV | _submission._tcp.clientcompany.com | 0 1 587 mail.yourplatform.com | Phone auto-discover |
+| SRV | _imaps._tcp.clientcompany.com | 0 1 993 mail.tishanyq.co.zw | Phone auto-discover |
+| SRV | _submission._tcp.clientcompany.com | 0 1 587 mail.tishanyq.co.zw | Phone auto-discover |
 | A | clientcompany.com | → CloudFront (alias) | Static site |
 | A | api.clientcompany.com | → ALB (alias) | Backend app |
 

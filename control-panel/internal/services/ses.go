@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 
-	"hosting-platform/control-panel/internal/config"
+	"tishanyq-hosting/control-panel/internal/config"
 )
 
 // SESService manages Amazon SES domain verification for customer domains.

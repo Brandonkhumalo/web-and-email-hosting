@@ -36,24 +36,19 @@ Written for beginners. Follow each step in order.
 
 Go to https://aws.amazon.com and create an account. You need a credit card.
 
-### 1.2 Install Tools on Your Computer
+### 1.2 Open AWS CloudShell
 
-You need 3 tools. Install all of them:
+CloudShell is a browser terminal built into the AWS Console. No local installs needed.
 
-**AWS CLI** (talks to AWS from your terminal):
-- Download: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+1. Log into the AWS Console
+2. Click the **`>_`** icon in the top-right navigation bar
+3. A terminal opens at the bottom of the page
 
-**Terraform** (creates your server automatically):
-- Download: https://developer.hashicorp.com/terraform/install
+Install Terraform in CloudShell:
 
-**Go** (builds the control panel API):
-- Download: https://go.dev/dl/
-
-After installing, verify they work:
-
-    aws --version
+    curl -fsSL https://releases.hashicorp.com/terraform/1.14.8/terraform_1.14.8_linux_amd64.zip -o tf.zip
+    unzip tf.zip && sudo mv terraform /usr/local/bin/
     terraform --version
-    go version
 
 ### 1.3 Own Your Domain
 
@@ -76,18 +71,11 @@ Do NOT use your root AWS account for everything. Create a separate user:
 7. Choose "Command Line Interface (CLI)"
 8. Save the **Access Key ID** and **Secret Access Key** — you need both later
 
-### 2.2 Configure AWS CLI
+### 2.2 Set Your Region
 
-Open your terminal and run:
+CloudShell uses your AWS Console credentials automatically — no configuration needed.
 
-    aws configure
-
-It will ask you 4 things:
-
-    AWS Access Key ID: (paste your access key)
-    AWS Secret Access Key: (paste your secret key)
-    Default region name: af-south-1
-    Default output format: json
+Make sure your AWS Console is set to **af-south-1** (Cape Town) — click the region name in the top-right of the console and select it. CloudShell inherits this region.
 
 **Why af-south-1?** That's Cape Town, South Africa — the closest AWS region to Zimbabwe. Your server will be faster for your users.
 
@@ -95,19 +83,15 @@ It will ask you 4 things:
 
 ### 2.3 Create an SSH Key Pair
 
-This is like a password to log into your server. Run:
+Terraform requires a key pair to create the EC2 instance. Run in CloudShell:
 
-    aws ec2 create-key-pair --key-name hosting-key --query KeyMaterial --output text > hosting-key.pem
+    aws ec2 create-key-pair --key-name tishanyq-hosting-key --query KeyMaterial --output text > tishanyq-hosting-key.pem
 
-On Mac/Linux, also run:
+You won't need this key for day-to-day use — you'll connect via the AWS Console browser terminal instead (Session Manager).
 
-    chmod 400 hosting-key.pem
+### 2.4 Find Your IP Address (Optional)
 
-Keep this file safe. If you lose it, you cannot log into your server.
-
-### 2.4 Find Your IP Address
-
-You need this to restrict who can SSH into your server:
+This restricts SSH access to your IP. If you plan to ONLY use the browser console and never SSH directly, you can set this to `0.0.0.0/0` or any placeholder. Otherwise:
 
     curl https://checkip.amazonaws.com
 
@@ -135,7 +119,7 @@ SES (Simple Email Service) is how your server sends email. By default it is in "
 
 Port 25 is how other mail servers deliver email TO you. AWS blocks it by default.
 
-**Do this AFTER Step 5 (terraform apply)** because you need your server's IP address first.
+**Do this AFTER Step 6 (terraform apply)** because you need your server's IP address first.
 
 1. Go to AWS Console > Support > Create Case
 2. Choose "Service limit increase"
@@ -151,7 +135,12 @@ Port 25 is how other mail servers deliver email TO you. AWS blocks it by default
 
 ## Step 4: Create Your Server Config File (5 min)
 
-Create a file called `production.tfvars` inside the `infra/terraform/` folder:
+You need to create a config file **on your own computer** (not in AWS yet — you'll upload it later).
+
+1. Open the project folder you downloaded/cloned earlier
+2. Navigate to: `infra/terraform/` (so you're inside `hosting/infra/terraform/`)
+3. Create a new text file in that folder and name it exactly: `production.tfvars`
+4. Open `production.tfvars` in any text editor (Notepad, VS Code, etc.) and paste this inside:
 
     aws_region            = "af-south-1"
     environment           = "prod"
@@ -173,9 +162,71 @@ Create a file called `production.tfvars` inside the `infra/terraform/` folder:
 
 ---
 
-## Step 5: Launch Your Server (10 min)
+## Step 5: Upload Files to CloudShell (5 min)
 
-Run these commands:
+Now you need to upload the Terraform files and your config file to CloudShell so it can build your server.
+
+First, create the folder structure in CloudShell:
+
+    mkdir -p infra/terraform
+
+Then click the **Actions > Upload file** button (top-right of the CloudShell panel) and upload these 9 files **one at a time** from the `infra/terraform/` folder on your computer:
+
+| File | What it does |
+|------|-------------|
+| `main.tf` | AWS provider config |
+| `variables.tf` | Input variable definitions |
+| `outputs.tf` | Output values (IP, nameservers, etc.) |
+| `vpc.tf` | VPC and subnet |
+| `ec2.tf` | EC2 instance and Elastic IP |
+| `security-groups.tf` | Firewall rules |
+| `route53.tf` | DNS zone and records |
+| `ses.tf` | Email sending service |
+| `user-data.sh` | Server bootstrap script (installs all software) |
+
+Also upload the `production.tfvars` file you created in Step 4.
+
+CloudShell uploads files to your home directory (`~`). After uploading, move them all into the terraform folder:
+
+    mv ~/main.tf ~/variables.tf ~/outputs.tf ~/vpc.tf ~/ec2.tf infra/terraform/ 2>/dev/null
+    mv ~/security-groups.tf ~/route53.tf ~/ses.tf ~/user-data.sh infra/terraform/ 2>/dev/null
+    mv ~/production.tfvars infra/terraform/ 2>/dev/null
+
+**Note:** The `2>/dev/null` hides errors for files that were already moved. If CloudShell says a file "already exists and will not be overwritten" during upload, delete the old copy first with `rm ~/filename`, then re-upload it.
+
+Verify everything is there:
+
+    ls infra/terraform/
+
+You should see all 10 files listed.
+
+**Tip:** You can also zip the `infra/terraform/` folder on your computer, upload the single zip file, and unzip it:
+
+    # Upload hosting-terraform.zip to CloudShell, then:
+    unzip hosting-terraform.zip
+
+---
+
+## Step 6: Launch Your Server (10 min)
+
+First, make sure Terraform is installed. If you set it up in Step 1.2, you're good. If not:
+
+**CloudShell (Ubuntu-based):**
+
+    curl -fsSL https://releases.hashicorp.com/terraform/1.14.8/terraform_1.14.8_linux_amd64.zip -o tf.zip
+    unzip tf.zip && sudo mv terraform /usr/local/bin/
+
+**Amazon Linux 2023 (if running commands directly on EC2):**
+
+    sudo dnf install -y yum-utils
+    sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+    sudo dnf install -y terraform
+
+Verify it's installed:
+
+    terraform --version
+
+Then run these commands:
 
     cd infra/terraform
     terraform init
@@ -197,30 +248,45 @@ The important values:
 
 ---
 
-## Step 6: Point Your Domain to Your Server (5 min + waiting)
+## Step 7: Point Your Domain to Your Server (5 min + waiting)
 
-Go to wherever you bought your domain (e.g., registrar website) and change the **nameservers** to the 4 values from `platform_nameservers`.
+Go to your domain registrar's DNS settings and add the following records, replacing `YOUR_ELASTIC_IP` with the `elastic_ip` value from Terraform output:
 
-Example — you would replace the existing nameservers with something like:
+| Type  | Name/Host         | Value                                      |
+|-------|-------------------|--------------------------------------------|
+| A     | @                 | YOUR_ELASTIC_IP                            |
+| A     | api               | YOUR_ELASTIC_IP                            |
+| A     | mail              | YOUR_ELASTIC_IP                            |
+| A     | webmail           | YOUR_ELASTIC_IP                            |
+| MX    | @                 | 10 mail.yourdomain.com                     |
+| TXT   | @                 | v=spf1 include:amazonses.com ~all          |
+| TXT   | _dmarc            | v=DMARC1; p=quarantine; rua=mailto:admin@yourdomain.com |
+| SRV   | _imaps._tcp       | 0 1 993 mail.yourdomain.com                |
+| SRV   | _submission._tcp  | 0 1 587 mail.yourdomain.com                |
 
-    ns-123.awsdns-45.com
-    ns-678.awsdns-90.net
-    ns-111.awsdns-22.org
-    ns-333.awsdns-44.co.uk
+> **Note:** Replace `yourdomain.com` with your actual domain (e.g., `tishanyq.co.zw`).
 
-**This takes 15-60 minutes to take effect.** You can check with:
+> **Note:** You also need to add the 3 DKIM CNAME records from Route53. Find them in **AWS Console > Route53 > Hosted Zones > your domain** — look for the `_domainkey` CNAME records and copy them to your registrar.
 
-    dig NS tishanyq.co.zw
+**DNS changes take 15-60 minutes to take effect.** You can check with:
 
-When it returns the Route53 nameservers, you're good.
+    dig A yourdomain.com
+
+When it returns your Elastic IP, you're good.
 
 ---
 
-## Step 7: Verify Your Server is Running (5 min)
+## Step 8: Verify Your Server is Running (5 min)
 
-SSH into your server:
+Connect to your server from the browser:
 
-    ssh -i hosting-key.pem ubuntu@YOUR_EC2_IP
+1. Go to **AWS Console > EC2 > Instances**
+2. Select your `tishanyq-hosting` instance
+3. Click **Connect** (top right)
+4. Choose the **Session Manager** tab
+5. Click **Connect** — a browser terminal opens
+
+> **Note:** If Session Manager says "not connected", wait 5 minutes for the SSM agent to register. The instance needs outbound internet access (which it has) and the IAM role (which Terraform creates automatically).
 
 Check that everything installed correctly:
 
@@ -240,18 +306,38 @@ You should see `hostingplatform` and `roundcubemail` in the list.
 
 ---
 
-## Step 8: Build and Deploy the API (10 min)
+## Step 9: Build and Deploy the API (10 min)
 
-### 8.1 Build the API on Your Computer
+All commands in this step are run **on the server** via Session Manager (browser terminal). Connect to your instance first (see Step 8).
 
-    cd control-panel
-    GOOS=linux GOARCH=amd64 go build -o bin/control-panel .
+Once connected, switch to a proper shell (Session Manager starts as `ssm-user`):
 
-This creates a file called `bin/control-panel` that runs on Linux (your EC2).
+    sudo -i
+    cd /opt/tishanyq-hosting
+
+### 8.1 Install Go and Build the API on the Server
+
+    # Install Go (if not already installed by user-data)
+    snap install go --classic
+
+    # Clone your code or upload it (see below)
+    # Option A: Clone from GitHub
+    git clone https://github.com/YOUR_USERNAME/hosting.git /tmp/hosting-build
+    cd /tmp/hosting-build/control-panel
+    go build -o /opt/tishanyq-hosting/bin/control-panel .
+
+    # Option B: If not using GitHub, upload via S3
+    # From your local machine (or CloudShell): aws s3 cp control-panel/ s3://tishanyq-hosting-uploads/control-panel/ --recursive
+    # On the server: aws s3 cp s3://tishanyq-hosting-uploads/control-panel/ /tmp/hosting-build/ --recursive
+    # Then build as above
 
 ### 8.2 Create Your .env File
 
-Copy `.env.example` to `.env` and fill in the real values:
+On the server, create the .env file:
+
+    nano /opt/tishanyq-hosting/.env
+
+Paste in these values (replace with your real values):
 
     PORT=8080
     ENVIRONMENT=production
@@ -290,7 +376,7 @@ Copy `.env.example` to `.env` and fill in the real values:
     JWT_SECRET=paste-a-random-64-char-string-here
     JWT_EXPIRE_HOURS=24
 
-To generate the JWT_SECRET, run:
+To generate the JWT_SECRET, run (on the server):
 
     openssl rand -hex 32
 
@@ -301,26 +387,19 @@ To generate the JWT_SECRET, run:
 - `PLATFORM_ZONE_ID` = from terraform output
 - `EC2_PUBLIC_IP` = from terraform output
 
-### 8.3 Upload to Your Server
+### 8.3 Start the API
 
-    scp -i hosting-key.pem bin/control-panel ubuntu@YOUR_EC2_IP:/opt/hosting-platform/bin/
-    scp -i hosting-key.pem .env ubuntu@YOUR_EC2_IP:/opt/hosting-platform/.env
-
-### 8.4 Start the API
-
-    ssh -i hosting-key.pem ubuntu@YOUR_EC2_IP 'sudo systemctl start hosting-api'
+    systemctl start hosting-api
 
 Check it started:
 
-    ssh -i hosting-key.pem ubuntu@YOUR_EC2_IP 'sudo systemctl status hosting-api'
+    systemctl status hosting-api
 
-### 8.5 Get SSL Certificates
+### 8.4 Get SSL Certificates
 
-This gives your sites HTTPS (the green lock in the browser). DNS must be propagated first (Step 6).
+This gives your sites HTTPS (the green lock in the browser). DNS must be propagated first (Step 7).
 
-    ssh -i hosting-key.pem ubuntu@YOUR_EC2_IP
-
-Then on the server:
+Run on the server:
 
     sudo certbot --nginx \
       -d api.tishanyq.co.zw \
@@ -329,29 +408,31 @@ Then on the server:
       --email admin@tishanyq.co.zw \
       --agree-tos --non-interactive
 
-### 8.6 Update Mail Server SSL
+### 8.5 Update Mail Server SSL
 
-After getting the certificates, tell Postfix and Dovecot to use them:
+After getting the certificates, tell Postfix and Dovecot to use them (on the server):
 
-    sudo postconf -e "smtpd_tls_cert_file=/etc/letsencrypt/live/mail.tishanyq.co.zw/fullchain.pem"
-    sudo postconf -e "smtpd_tls_key_file=/etc/letsencrypt/live/mail.tishanyq.co.zw/privkey.pem"
-    sudo systemctl restart postfix dovecot
+    postconf -e "smtpd_tls_cert_file=/etc/letsencrypt/live/mail.tishanyq.co.zw/fullchain.pem"
+    postconf -e "smtpd_tls_key_file=/etc/letsencrypt/live/mail.tishanyq.co.zw/privkey.pem"
+    systemctl restart postfix dovecot
 
-### 8.7 Grant Mail Database Permissions
+### 8.6 Grant Mail Database Permissions
 
-The mail server needs to read email accounts from the database:
+The mail server needs to read email accounts from the database (on the server):
 
     sudo -u postgres psql -d hostingplatform -c "GRANT SELECT ON domains, email_accounts, email_aliases TO mailuser;"
 
-### 8.8 Verify Everything Works
+### 8.7 Verify Everything Works
 
-    curl https://api.tishanyq.co.zw/health
+Open a new browser tab and visit:
+
+    https://api.tishanyq.co.zw/health
 
 Should return: `{"status":"ok"}`
 
 ---
 
-## Step 9: Host Your First Website (5 min)
+## Step 10: Host Your First Website (5 min)
 
 You can do this RIGHT NOW — no email approvals needed.
 
@@ -375,7 +456,7 @@ The response contains a `token`. Copy it — you need it for every request below
       -H "Content-Type: application/json" \
       -d '{"name": "tishanyq.co.zw"}'
 
-The response shows `nameservers`. Since you already pointed your domain to Route53 in Step 6, this should already be working.
+The response shows `nameservers`. Since you already pointed your domain to Route53 in Step 7, this should already be working.
 
 ### 9.3 Verify the Domain
 
@@ -395,25 +476,29 @@ This creates your site. The response tells you the `site_root` path (e.g., `/var
 
 ### 9.5 Upload Your Website Files
 
-SSH into the server and put your HTML/CSS/JS files in the site root:
+Connect to your server via Session Manager (Step 8), then create your website files:
 
-    scp -i hosting-key.pem -r my-website/* ubuntu@YOUR_EC2_IP:/var/www/tishanyq.co.zw/
-
-Or SSH in and edit directly:
-
-    ssh -i hosting-key.pem ubuntu@YOUR_EC2_IP
     sudo nano /var/www/tishanyq.co.zw/index.html
+
+Or upload files via S3:
+
+    # From your local machine (or CloudShell):
+    aws s3 cp my-website/ s3://tishanyq-hosting-uploads/sites/tishanyq.co.zw/ --recursive
+
+    # On the server (via Session Manager):
+    sudo aws s3 cp s3://tishanyq-hosting-uploads/sites/tishanyq.co.zw/ /var/www/tishanyq.co.zw/ --recursive
 
 ### 9.6 Get SSL for Your Website
 
-    ssh -i hosting-key.pem ubuntu@YOUR_EC2_IP
+On the server (via Session Manager):
+
     sudo certbot --nginx -d tishanyq.co.zw --email admin@tishanyq.co.zw --agree-tos --non-interactive
 
 Your website is now live at `https://tishanyq.co.zw`
 
 ---
 
-## Step 10: Add Customer Websites
+## Step 11: Add Customer Websites
 
 Repeat the same process for each customer domain. The customer must:
 
@@ -438,16 +523,16 @@ You do:
       -H "Content-Type: application/json" \
       -d '{"domain_id": 2, "subdomain": "@"}'
 
-    # Get SSL
-    ssh -i hosting-key.pem ubuntu@YOUR_EC2_IP
+    # Get SSL (on the server via Session Manager)
     sudo certbot --nginx -d customerdomain.co.zw --agree-tos --non-interactive
 
-    # Upload their files
-    scp -i hosting-key.pem -r customer-files/* ubuntu@YOUR_EC2_IP:/var/www/customerdomain.co.zw/
+    # Upload their files via S3
+    # Local/CloudShell: aws s3 cp customer-files/ s3://tishanyq-hosting-uploads/sites/customerdomain.co.zw/ --recursive
+    # Server: sudo aws s3 cp s3://tishanyq-hosting-uploads/sites/customerdomain.co.zw/ /var/www/customerdomain.co.zw/ --recursive
 
 ---
 
-## Step 11: Set Up Email (after AWS approvals)
+## Step 12: Set Up Email (after AWS approvals)
 
 Once AWS approves your SES production access AND port 25 unblock, you can set up email.
 
@@ -459,9 +544,8 @@ Get your SES credentials:
     terraform output -raw ses_smtp_access_key
     terraform output -raw ses_smtp_secret_key
 
-SSH into the server and update Postfix:
+Connect to the server via Session Manager and update Postfix:
 
-    ssh -i hosting-key.pem ubuntu@YOUR_EC2_IP
     sudo nano /etc/postfix/sasl_passwd
 
 Change the line to (replace with your actual credentials):
@@ -589,7 +673,7 @@ The user will need to update the password on their phone too.
 
 ---
 
-## Step 12: Verification Checklist
+## Step 13: Verification Checklist
 
 ### Websites (should work immediately)
 - [ ] https://tishanyq.co.zw loads your website
@@ -638,29 +722,29 @@ To upgrade the EC2:
     cd infra/terraform
     terraform apply -var-file=production.tfvars
 
-    # Re-upload your binary and restart
-    scp -i hosting-key.pem bin/control-panel ubuntu@EC2_IP:/opt/hosting-platform/bin/
-    ssh -i hosting-key.pem ubuntu@EC2_IP 'sudo systemctl restart hosting-api'
+    # After the instance restarts, connect via Session Manager and rebuild
+    cd /tmp/hosting-build/control-panel && go build -o /opt/tishanyq-hosting/bin/control-panel .
+    sudo systemctl restart hosting-api
 
 ---
 
 ## Deploying Code Updates
 
-When you update the Go API code:
+When you update the Go API code, connect to the server via Session Manager and:
 
-    cd control-panel
-    GOOS=linux GOARCH=amd64 go build -o bin/control-panel .
-    scp -i hosting-key.pem bin/control-panel ubuntu@EC2_IP:/opt/hosting-platform/bin/
-    ssh -i hosting-key.pem ubuntu@EC2_IP 'sudo systemctl restart hosting-api'
+    sudo -i
+    cd /tmp/hosting-build/control-panel
+    git pull
+    go build -o /opt/tishanyq-hosting/bin/control-panel .
+    systemctl restart hosting-api
 
 ---
 
 ## Troubleshooting
 
 **"API won't start"**
-Check the logs:
+Connect via Session Manager and check the logs:
 
-    ssh -i hosting-key.pem ubuntu@EC2_IP
     sudo journalctl -u hosting-api -f
 
 **"Website shows 444 or blank page"**

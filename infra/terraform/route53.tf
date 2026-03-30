@@ -18,7 +18,7 @@ resource "aws_route53_record" "platform_a" {
   records = [aws_eip.main.public_ip]
 }
 
-# --- api.yourplatform.com → EC2 Elastic IP ---
+# --- api.tishanyq.co.zw → EC2 Elastic IP ---
 resource "aws_route53_record" "api" {
   zone_id = aws_route53_zone.platform.zone_id
   name    = "api.${var.platform_domain}"
@@ -27,7 +27,7 @@ resource "aws_route53_record" "api" {
   records = [aws_eip.main.public_ip]
 }
 
-# --- mail.yourplatform.com → EC2 Elastic IP ---
+# --- mail.tishanyq.co.zw → EC2 Elastic IP ---
 resource "aws_route53_record" "mail" {
   zone_id = aws_route53_zone.platform.zone_id
   name    = "mail.${var.platform_domain}"
@@ -36,7 +36,7 @@ resource "aws_route53_record" "mail" {
   records = [aws_eip.main.public_ip]
 }
 
-# --- webmail.yourplatform.com → EC2 Elastic IP ---
+# --- webmail.tishanyq.co.zw → EC2 Elastic IP ---
 resource "aws_route53_record" "webmail" {
   zone_id = aws_route53_zone.platform.zone_id
   name    = "webmail.${var.platform_domain}"

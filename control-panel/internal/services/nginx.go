@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"hosting-platform/control-panel/internal/config"
+	"tishanyq-hosting/control-panel/internal/config"
 )
 
 // NginxService manages Nginx server block configs for customer sites.

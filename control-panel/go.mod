@@ -1,4 +1,4 @@
-module hosting-platform/control-panel
+module tishanyq-hosting/control-panel
 
 go 1.22
 
